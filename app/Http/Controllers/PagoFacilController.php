@@ -167,14 +167,17 @@ class PagoFacilController extends Controller
                 'url' => $this->baseUrl . '/query-transaction'
             ]);
 
-            // Es POST y usa pagofacilTransactionId en el body
-            $resp = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $bearerToken,
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json'
-            ])->post($this->baseUrl . '/query-transaction', [
-                'pagofacilTransactionId' => $request->tnTransaccion
-            ]);
+            // Aumentar timeout a 60 segundos y agregar retry
+            $resp = Http::timeout(60) // ← Cambiar de 30 a 60
+                ->retry(2, 100) // ← Reintentar 2 veces con 100ms entre intentos
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $bearerToken,
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json'
+                ])
+                ->post($this->baseUrl . '/query-transaction', [
+                    'pagofacilTransactionId' => $request->tnTransaccion
+                ]);
 
             Log::info("Respuesta consulta estado", [
                 'status' => $resp->status(),
@@ -190,11 +193,8 @@ class PagoFacilController extends Controller
             }
 
             $data = $resp->json();
-
-            // El estado viene en values.paymentStatus
             $paymentStatus = $data['values']['paymentStatus'] ?? null;
 
-            // Mapear el ID del estado a texto legible
             $estadoTexto = "DESCONOCIDO";
             switch ($paymentStatus) {
                 case 1:
@@ -216,6 +216,16 @@ class PagoFacilController extends Controller
                 "paymentStatus" => $paymentStatus,
                 "data" => $data
             ]);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            // Error de conexión/timeout específico
+            Log::error("Timeout/Conexión en consultarEstado", [
+                'message' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                "error" => "La consulta tardó demasiado. Intenta nuevamente.",
+                "timeout" => true
+            ], 504); // Gateway Timeout
         } catch (\Exception $e) {
             Log::error("Excepción consultarEstado", [
                 'message' => $e->getMessage()
