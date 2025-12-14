@@ -88,7 +88,7 @@ class PagoFacilController extends Controller
             $bearerToken = $this->getBearerToken();
 
             // Generar QR
-            Log::info("CALLBACK URL", route('pagofacil.callback'));
+            Log::info("CALLBACK URL", ['url' => route('pagofacil.callback')]);
             $resp = Http::timeout(30)
                 ->withHeaders([
                     'Content-Type' => 'application/json',

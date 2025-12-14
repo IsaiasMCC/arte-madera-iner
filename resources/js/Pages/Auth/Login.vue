@@ -7,7 +7,7 @@
         <!-- Lado imagen -->
         <div class="login-img">
             <h2 style="color: white;">TIENDA DE ARTE EN MADERA</h2>
-            <img src="/images/logo-arte.jpg" alt="Logo">
+            <img src="/inf513/grupo06sc/proyecto_2/public/images/logo-arte.jpg" alt="Logo">
         </div>
 
         <!-- Formulario -->
