@@ -233,13 +233,13 @@ class PagoFacilController extends Controller
             Log::info("Callback PagoFácil recibido", $request->all());
 
             // Leer campos reales que envía PagoFácil
-            $transaccionId = $request->input('PedidoID');
-            $estado        = $request->input('Estado');
-            $fecha         = $request->input('Fecha');
-            $hora          = $request->input('Hora');
-            $metodoPago    = $request->input('MetodoPago');
+            $pedidoID   = $request->input('PedidoID'); // "PED-21-1765746251"
+            $estado     = $request->input('Estado');
+            $fecha      = $request->input('Fecha');
+            $hora       = $request->input('Hora');
+            $metodoPago = $request->input('MetodoPago');
 
-            if (!$transaccionId) {
+            if (!$pedidoID) {
                 Log::error("No se recibió PedidoID en el callback");
                 return response()->json([
                     'error' => 1,
@@ -251,27 +251,81 @@ class PagoFacilController extends Controller
                 ], 400);
             }
 
-            $pago = Pago::where('transaccion_qr', $transaccionId)->first();
+            // AQUÍ ESTÁ EL CAMBIO PRINCIPAL
+            // Extraer el ID del pedido de "PED-21-1765746251" -> "21"
+            preg_match('/PED-(\d+)-/', $pedidoID, $matches);
+            $pedidoId = $matches[1] ?? null;
+
+            if (!$pedidoId) {
+                Log::error("No se pudo extraer el ID del pedido", ['PedidoID' => $pedidoID]);
+                return response()->json([
+                    'error' => 1,
+                    'status' => 0,
+                    'message' => 'Formato de PedidoID inválido',
+                    'messageMostrar' => 0,
+                    'messageSistema' => 'No se pudo extraer ID',
+                    'values' => false
+                ], 400);
+            }
+
+            Log::info("ID del pedido extraído", ['pedido_id' => $pedidoId, 'pedidoID_completo' => $pedidoID]);
+
+            // Buscar el pago más reciente para este pedido que no esté completado
+            $pago = Pago::where('pedido_id', $pedidoId)
+                ->whereDoesntHave('detallePagos') // O la condición que uses para pagos pendientes
+                ->latest()
+                ->first();
+
+            // Si no hay pago sin detalles, buscar el último pago del pedido
+            if (!$pago) {
+                $pago = Pago::where('pedido_id', $pedidoId)
+                    ->latest()
+                    ->first();
+            }
 
             if (!$pago) {
-                Log::warning("Pago no encontrado para transacción: " . $transaccionId);
+                Log::warning("Pago no encontrado para pedido", ['pedido_id' => $pedidoId, 'pedidoID' => $pedidoID]);
                 return response()->json([
                     'error' => 1,
                     'status' => 0,
                     'message' => 'Pago no encontrado',
                     'messageMostrar' => 0,
-                    'messageSistema' => '',
+                    'messageSistema' => "No existe pago para pedido {$pedidoId}",
                     'values' => false
                 ], 404);
+            }
+
+            // Guardar el ID de transacción de PagoFácil
+            if (!$pago->transaccion_qr) {
+                $pago->transaccion_qr = $pedidoID;
+                $pago->save();
+                Log::info("Transacción QR guardada", ['pago_id' => $pago->id, 'transaccion' => $pedidoID]);
             }
 
             // Estados que indican que el pago fue completado
             $estadosPagado = ['2', 2, 'COMPLETED', 'PAGADO', 'APPROVED', 'SUCCESS'];
 
             if (in_array($estado, $estadosPagado)) {
-
                 $pedido = $pago->pedido;
                 $monto  = $pedido->saldoPendiente();
+
+                // Verificar que no se duplique el pago
+                $yaRegistrado = DetallePago::where('pago_id', $pago->id)
+                    ->where('monto', $monto)
+                    ->whereDate('created_at', today())
+                    ->exists();
+
+                if ($yaRegistrado) {
+                    Log::info("Pago ya registrado anteriormente", ['pago_id' => $pago->id]);
+                    return response()->json([
+                        'error' => 0,
+                        'status' => 1,
+                        'message' => 'Pago ya fue registrado',
+                        'messageMostrar' => 0,
+                        'messageSistema' => '',
+                        'values' => true
+                    ], 200);
+                }
 
                 // Registrar el pago
                 DetallePago::create([
@@ -287,12 +341,12 @@ class PagoFacilController extends Controller
 
                 Log::info("Pago procesado exitosamente", [
                     'pago_id' => $pago->id,
+                    'pedido_id' => $pedidoId,
                     'monto'   => $monto,
                     'metodo'  => $metodoPago
                 ]);
             }
 
-            // RESPUESTA con tu formato completo
             return response()->json([
                 'error' => 0,
                 'status' => 1,
@@ -303,6 +357,8 @@ class PagoFacilController extends Controller
             ], 200);
         } catch (\Exception $e) {
             Log::error("Error en callback: " . $e->getMessage(), [
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
                 'stack' => $e->getTraceAsString()
             ]);
 
