@@ -1,0 +1,490 @@
+/* ===== VARIABLES BASE ===== */
+:root {
+  --primary-color: #6c757d;
+  --secondary-color: #343a40;
+  --navbar-color: #e9ecef;
+  --sidebar-color: #f8f9fa;
+  --card-color: #f1f3f5;
+  --text-color: #333;
+  --badge-color: #6c757d;
+  --link-color: #333;
+  --body-bg: #ffffff;
+}
+
+/* ===== TEMAS ===== */
+body.tema-ninos {
+  --primary-color: #ff6f61;
+  --secondary-color: #ffcc5c;
+  --navbar-color: #ffb3a7;
+  --sidebar-color: #fff0f0;
+  --card-color: #ffe6e0;
+  --text-color: #333;
+  --badge-color: #ff6f61;
+  --link-color: #ff6f61;
+  --body-bg: #fff5f5;
+}
+
+body.tema-jovenes {
+  --primary-color: #4e73df;
+  --secondary-color: #1cc88a;
+  --navbar-color: #dce6ff;
+  --sidebar-color: #f0f8ff;
+  --card-color: #e6f0ff;
+  --text-color: #333;
+  --badge-color: #4e73df;
+  --link-color: #4e73df;
+  --body-bg: #f5f8ff;
+}
+
+body.tema-adultos {
+  --primary-color: #6c757d;
+  --secondary-color: #343a40;
+  --navbar-color: #e9ecef;
+  --sidebar-color: #f8f9fa;
+  --card-color: #f1f3f5;
+  --text-color: #333;
+  --badge-color: #6c757d;
+  --link-color: #6c757d;
+  --body-bg: #ffffff;
+}
+
+/* ===== MODO NOCHE ===== */
+body.modo-noche {
+  --primary-color: #5555ff;
+  --secondary-color: #444466;
+  --navbar-color: #1e1e2f;
+  --sidebar-color: #1e1e2f;
+  --card-color: #2a2a3d;
+  --text-color: #f0f0f0;
+  --badge-color: #5555ff;
+  --link-color: #7777ff;
+  --border-color: #3a3a4d;
+  --body-bg: #151521;
+}
+
+/* ===== APLICAR ESTILOS (con mayor especificidad) ===== */
+
+/* Body background */
+body.tema-ninos,
+body.tema-jovenes,
+body.tema-adultos,
+body.modo-noche {
+  background-color: var(--body-bg) !important;
+}
+
+/* Main content area */
+.app-main {
+  background-color: var(--body-bg) !important;
+}
+
+.app-content {
+  background-color: var(--body-bg) !important;
+}
+
+/* Navbar */
+.app-header.navbar {
+  background-color: var(--navbar-color) !important;
+}
+
+.app-header .nav-link,
+.app-header .navbar-nav .nav-link {
+  color: var(--text-color) !important;
+}
+
+.app-header .nav-link:hover {
+  color: var(--primary-color) !important;
+}
+
+/* User dropdown header */
+.user-header.text-bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+/* Sidebar */
+.app-sidebar {
+  background-color: var(--sidebar-color) !important;
+}
+
+.app-sidebar .sidebar-wrapper {
+  background-color: var(--sidebar-color) !important;
+}
+
+.app-sidebar .nav-link {
+  color: var(--text-color) !important;
+}
+
+.app-sidebar .nav-link:hover {
+  background-color: var(--secondary-color) !important;
+  color: #fff !important;
+}
+
+.app-sidebar .nav-link.active {
+  background-color: var(--primary-color) !important;
+  color: #fff !important;
+}
+
+.app-sidebar .nav-header {
+  color: var(--text-color) !important;
+  opacity: 0.7;
+}
+
+.app-sidebar .sidebar-brand .brand-link {
+  background-color: var(--sidebar-color) !important;
+  color: var(--text-color) !important;
+  border-bottom: 1px solid var(--secondary-color) !important;
+}
+
+/* Cards */
+.card {
+  background-color: var(--card-color) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color, #dee2e6) !important;
+}
+
+.card-header {
+  background-color: var(--primary-color) !important;
+  color: #fff !important;
+  border-bottom: 1px solid var(--secondary-color) !important;
+}
+
+.card-body {
+  background-color: var(--card-color) !important;
+  color: var(--text-color) !important;
+}
+
+/* Small boxes */
+.small-box {
+  background-color: var(--card-color) !important;
+  color: var(--text-color) !important;
+}
+
+.small-box.bg-info { 
+  background-color: var(--primary-color) !important; 
+  color: #fff !important; 
+}
+
+.small-box.bg-success { 
+  background-color: var(--secondary-color) !important; 
+  color: #fff !important; 
+}
+
+.small-box .icon {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Footer */
+.app-footer {
+  background-color: var(--sidebar-color) !important;
+  color: var(--text-color) !important;
+  border-top: 1px solid var(--secondary-color) !important;
+}
+
+/* Badges */
+.badge, 
+.navbar-badge {
+  background-color: var(--badge-color) !important;
+  color: #fff !important;
+}
+
+/* Botones */
+.btn-primary {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: #fff !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--secondary-color) !important;
+  border-color: var(--secondary-color) !important;
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color) !important;
+  border-color: var(--secondary-color) !important;
+  color: #fff !important;
+}
+
+/* Dropdowns */
+.dropdown-menu {
+  background-color: var(--card-color) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color, #dee2e6) !important;
+}
+
+.dropdown-item {
+  color: var(--text-color) !important;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: var(--primary-color) !important;
+  color: #fff !important;
+}
+
+.dropdown-header {
+  color: var(--text-color) !important;
+  opacity: 0.8;
+}
+
+.dropdown-divider {
+  border-top-color: var(--border-color, #dee2e6) !important;
+}
+
+/* Tables */
+.table {
+  color: var(--text-color) !important;
+  --bs-table-bg: transparent;
+}
+
+body.modo-noche .table {
+  --bs-table-bg: var(--card-color);
+  --bs-table-striped-bg: var(--sidebar-color);
+  --bs-table-hover-bg: var(--secondary-color);
+}
+
+.table thead th {
+  background-color: var(--primary-color) !important;
+  color: #fff !important;
+  border-color: var(--border-color, #dee2e6) !important;
+}
+
+/* Forms */
+body.modo-noche .form-control,
+body.modo-noche .form-select {
+  background-color: var(--card-color) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+body.modo-noche .form-control:focus,
+body.modo-noche .form-select:focus {
+  background-color: var(--card-color) !important;
+  color: var(--text-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  background-color: transparent !important;
+}
+
+.breadcrumb-item a {
+  color: var(--link-color) !important;
+}
+
+.breadcrumb-item.active {
+  color: var(--text-color) !important;
+}
+
+/* Content header */
+.app-content-header {
+  background-color: transparent !important;
+}
+
+.app-content-header h3 {
+  color: var(--text-color) !important;
+}
+
+/* Texto general */
+body.tema-ninos p,
+body.tema-jovenes p,
+body.tema-adultos p,
+body.modo-noche p,
+body.tema-ninos h1, body.tema-ninos h2, body.tema-ninos h3, body.tema-ninos h4, body.tema-ninos h5, body.tema-ninos h6,
+body.tema-jovenes h1, body.tema-jovenes h2, body.tema-jovenes h3, body.tema-jovenes h4, body.tema-jovenes h5, body.tema-jovenes h6,
+body.tema-adultos h1, body.tema-adultos h2, body.tema-adultos h3, body.tema-adultos h4, body.tema-adultos h5, body.tema-adultos h6,
+body.modo-noche h1, body.modo-noche h2, body.modo-noche h3, body.modo-noche h4, body.modo-noche h5, body.modo-noche h6 {
+  color: var(--text-color) !important;
+}
+
+/* ===== MODO OSCURO - TEXTOS ADICIONALES ===== */
+
+/* Texto general en modo noche */
+body.modo-noche span,
+body.modo-noche label,
+body.modo-noche div:not(.card-header):not(.user-header):not(.btn):not(.badge) {
+  color: var(--text-color) !important;
+}
+
+/* Links en modo noche */
+body.modo-noche a:not(.btn):not(.nav-link):not(.dropdown-item) {
+  color: var(--link-color) !important;
+}
+
+body.modo-noche a:not(.btn):not(.nav-link):not(.dropdown-item):hover {
+  color: var(--primary-color) !important;
+}
+
+/* Navbar texto en modo noche */
+body.modo-noche .app-header .nav-link,
+body.modo-noche .app-header .navbar-nav .nav-link,
+body.modo-noche .navbar .nav-link {
+  color: var(--text-color) !important;
+}
+
+/* Sidebar texto en modo noche */
+body.modo-noche .app-sidebar .nav-link,
+body.modo-noche .app-sidebar .nav-header,
+body.modo-noche .app-sidebar .brand-text {
+  color: var(--text-color) !important;
+}
+
+/* Content header en modo noche */
+body.modo-noche .app-content-header h3,
+body.modo-noche .app-content-header * {
+  color: var(--text-color) !important;
+}
+
+/* Breadcrumb en modo noche */
+body.modo-noche .breadcrumb-item,
+body.modo-noche .breadcrumb-item.active {
+  color: var(--text-color) !important;
+}
+
+body.modo-noche .breadcrumb-item a {
+  color: var(--link-color) !important;
+}
+
+/* Cards en modo noche - texto del body */
+body.modo-noche .card-body *:not(.btn):not(.badge) {
+  color: var(--text-color) !important;
+}
+
+/* Card headers mantienen blanco */
+body.modo-noche .card-header,
+body.modo-noche .card-header * {
+  color: #fff !important;
+}
+
+/* Tables en modo noche */
+body.modo-noche .table,
+body.modo-noche .table td,
+body.modo-noche .table th {
+  color: var(--text-color) !important;
+}
+
+body.modo-noche .table thead th {
+  color: #fff !important;
+}
+
+/* Forms en modo noche */
+body.modo-noche .form-label,
+body.modo-noche .form-control,
+body.modo-noche .form-select,
+body.modo-noche .form-check-label {
+  color: var(--text-color) !important;
+}
+
+body.modo-noche .form-control::placeholder {
+  color: rgba(240, 240, 240, 0.5) !important;
+}
+
+/* Dropdown en modo noche */
+body.modo-noche .dropdown-menu {
+  background-color: var(--card-color) !important;
+}
+
+body.modo-noche .dropdown-item {
+  color: var(--text-color) !important;
+}
+
+body.modo-noche .dropdown-item:hover {
+  color: #fff !important;
+}
+
+/* Footer en modo noche */
+body.modo-noche .app-footer,
+body.modo-noche .app-footer *:not(a) {
+  color: var(--text-color) !important;
+}
+
+body.modo-noche .app-footer a {
+  color: var(--link-color) !important;
+}
+
+/* Small boxes en modo noche */
+body.modo-noche .small-box h3,
+body.modo-noche .small-box p {
+  color: var(--text-color) !important;
+}
+
+body.modo-noche .small-box.bg-info h3,
+body.modo-noche .small-box.bg-info p,
+body.modo-noche .small-box.bg-success h3,
+body.modo-noche .small-box.bg-success p {
+  color: #fff !important;
+}
+
+/* User menu dropdown en modo noche */
+body.modo-noche .user-menu .dropdown-menu {
+  background-color: var(--card-color) !important;
+}
+
+body.modo-noche .user-menu .user-header {
+  background-color: var(--primary-color) !important;
+}
+
+body.modo-noche .user-menu .user-header p,
+body.modo-noche .user-menu .user-header small {
+  color: #fff !important;
+}
+
+body.modo-noche .user-menu .user-footer .btn {
+  color: var(--text-color) !important;
+  background-color: transparent !important;
+  border-color: var(--border-color) !important;
+}
+
+body.modo-noche .user-menu .user-footer .btn:hover {
+  background-color: var(--primary-color) !important;
+  color: #fff !important;
+}
+
+/* Badges mantienen blanco */
+body.modo-noche .badge,
+body.modo-noche .navbar-badge {
+  color: #fff !important;
+}
+
+/* Botones mantienen blanco */
+body.modo-noche .btn-primary,
+body.modo-noche .btn-secondary,
+body.modo-noche .btn-success,
+body.modo-noche .btn-danger,
+body.modo-noche .btn-warning,
+body.modo-noche .btn-info {
+  color: #fff !important;
+}
+
+/* Texto de botones default/outline en modo noche */
+body.modo-noche .btn-default,
+body.modo-noche .btn-outline-primary,
+body.modo-noche .btn-outline-secondary {
+  color: var(--text-color) !important;
+}
+
+body.modo-noche .btn-default:hover,
+body.modo-noche .btn-outline-primary:hover,
+body.modo-noche .btn-outline-secondary:hover {
+  color: #fff !important;
+}
+
+/* Iconos heredan color del texto */
+body.modo-noche .nav-icon,
+body.modo-noche .bi {
+  color: inherit !important;
+}
+
+/* Lista de mensajes en dropdown */
+body.modo-noche .dropdown-item-title {
+  color: var(--text-color) !important;
+}
+
+body.modo-noche .dropdown-item .text-secondary {
+  color: rgba(240, 240, 240, 0.6) !important;
+}
+
+body.modo-noche .dropdown-footer {
+  color: var(--text-color) !important;
+}

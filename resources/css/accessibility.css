@@ -1,0 +1,227 @@
+/* ===== ACCESIBILIDAD - TAMAÑOS DE FUENTE ===== */
+
+/* Tamaño normal (por defecto) */
+body {
+  font-size: 14px;
+}
+
+/* Tamaño grande */
+body.fuente-grande {
+  font-size: 16px;
+}
+
+body.fuente-grande h1 { font-size: 2.5rem; }
+body.fuente-grande h2 { font-size: 2rem; }
+body.fuente-grande h3 { font-size: 1.75rem; }
+body.fuente-grande h4 { font-size: 1.5rem; }
+body.fuente-grande h5 { font-size: 1.25rem; }
+body.fuente-grande h6 { font-size: 1.1rem; }
+
+body.fuente-grande .nav-link { font-size: 1rem; }
+body.fuente-grande .btn { font-size: 1rem; padding: 0.5rem 1rem; }
+body.fuente-grande .form-control { font-size: 1rem; }
+body.fuente-grande .form-select { font-size: 1rem; }
+body.fuente-grande .table { font-size: 1rem; }
+body.fuente-grande .breadcrumb { font-size: 1rem; }
+body.fuente-grande .badge { font-size: 0.9rem; }
+body.fuente-grande .small-box h3 { font-size: 2.5rem; }
+body.fuente-grande .small-box p { font-size: 1.1rem; }
+
+/* Tamaño extra grande */
+body.fuente-extra-grande {
+  font-size: 18px;
+}
+
+body.fuente-extra-grande h1 { font-size: 3rem; }
+body.fuente-extra-grande h2 { font-size: 2.5rem; }
+body.fuente-extra-grande h3 { font-size: 2rem; }
+body.fuente-extra-grande h4 { font-size: 1.75rem; }
+body.fuente-extra-grande h5 { font-size: 1.5rem; }
+body.fuente-extra-grande h6 { font-size: 1.25rem; }
+
+body.fuente-extra-grande .nav-link { font-size: 1.2rem; }
+body.fuente-extra-grande .btn { font-size: 1.2rem; padding: 0.6rem 1.2rem; }
+body.fuente-extra-grande .form-control { font-size: 1.2rem; padding: 0.6rem 0.75rem; }
+body.fuente-extra-grande .form-select { font-size: 1.2rem; padding: 0.6rem 0.75rem; }
+body.fuente-extra-grande .table { font-size: 1.2rem; }
+body.fuente-extra-grande .breadcrumb { font-size: 1.2rem; }
+body.fuente-extra-grande .badge { font-size: 1rem; }
+body.fuente-extra-grande .small-box h3 { font-size: 3rem; }
+body.fuente-extra-grande .small-box p { font-size: 1.3rem; }
+
+/* ===== CONTRASTE ALTO ===== */
+
+body.contraste-alto {
+  --text-contrast: #000000;
+  --bg-contrast: #ffffff;
+  --border-contrast: #000000;
+}
+
+/* Modo contraste alto */
+body.contraste-alto:not(.modo-noche) {
+  background-color: var(--bg-contrast) !important;
+}
+
+body.contraste-alto:not(.modo-noche) * {
+  color: var(--text-contrast) !important;
+}
+
+body.contraste-alto:not(.modo-noche) .app-header,
+body.contraste-alto:not(.modo-noche) .app-sidebar,
+body.contraste-alto:not(.modo-noche) .app-footer {
+  background-color: var(--bg-contrast) !important;
+  border: 2px solid var(--border-contrast) !important;
+}
+
+body.contraste-alto:not(.modo-noche) .card {
+  background-color: var(--bg-contrast) !important;
+  border: 2px solid var(--border-contrast) !important;
+  color: var(--text-contrast) !important;
+}
+
+body.contraste-alto:not(.modo-noche) .card-header {
+  background-color: var(--text-contrast) !important;
+  color: var(--bg-contrast) !important;
+  border: 2px solid var(--border-contrast) !important;
+}
+
+body.contraste-alto:not(.modo-noche) .nav-link {
+  color: var(--text-contrast) !important;
+  border: 1px solid transparent;
+}
+
+body.contraste-alto:not(.modo-noche) .nav-link:hover,
+body.contraste-alto:not(.modo-noche) .nav-link:focus {
+  background-color: var(--text-contrast) !important;
+  color: var(--bg-contrast) !important;
+  border: 1px solid var(--border-contrast) !important;
+}
+
+body.contraste-alto:not(.modo-noche) .nav-link.active {
+  background-color: var(--text-contrast) !important;
+  color: var(--bg-contrast) !important;
+  font-weight: bold;
+}
+
+body.contraste-alto:not(.modo-noche) .btn {
+  border: 2px solid var(--border-contrast) !important;
+  font-weight: bold;
+}
+
+body.contraste-alto:not(.modo-noche) .btn-primary {
+  background-color: var(--text-contrast) !important;
+  color: var(--bg-contrast) !important;
+}
+
+body.contraste-alto:not(.modo-noche) .form-control,
+body.contraste-alto:not(.modo-noche) .form-select {
+  background-color: var(--bg-contrast) !important;
+  color: var(--text-contrast) !important;
+  border: 2px solid var(--border-contrast) !important;
+}
+
+body.contraste-alto:not(.modo-noche) .table {
+  border: 2px solid var(--border-contrast) !important;
+}
+
+body.contraste-alto:not(.modo-noche) .table td,
+body.contraste-alto:not(.modo-noche) .table th {
+  border: 1px solid var(--border-contrast) !important;
+  color: var(--text-contrast) !important;
+}
+
+body.contraste-alto:not(.modo-noche) .dropdown-menu {
+  background-color: var(--bg-contrast) !important;
+  border: 2px solid var(--border-contrast) !important;
+}
+
+body.contraste-alto:not(.modo-noche) .dropdown-item {
+  color: var(--text-contrast) !important;
+}
+
+body.contraste-alto:not(.modo-noche) .dropdown-item:hover {
+  background-color: var(--text-contrast) !important;
+  color: var(--bg-contrast) !important;
+}
+
+/* Contraste alto en modo noche */
+body.contraste-alto.modo-noche {
+  --text-contrast: #ffffff;
+  --bg-contrast: #000000;
+  --border-contrast: #ffffff;
+}
+
+body.contraste-alto.modo-noche {
+  background-color: var(--bg-contrast) !important;
+}
+
+body.contraste-alto.modo-noche * {
+  color: var(--text-contrast) !important;
+}
+
+body.contraste-alto.modo-noche .app-header,
+body.contraste-alto.modo-noche .app-sidebar,
+body.contraste-alto.modo-noche .app-footer {
+  background-color: var(--bg-contrast) !important;
+  border: 2px solid var(--border-contrast) !important;
+}
+
+body.contraste-alto.modo-noche .card {
+  background-color: var(--bg-contrast) !important;
+  border: 2px solid var(--border-contrast) !important;
+}
+
+body.contraste-alto.modo-noche .card-header {
+  background-color: var(--text-contrast) !important;
+  color: var(--bg-contrast) !important;
+}
+
+body.contraste-alto.modo-noche .nav-link:hover,
+body.contraste-alto.modo-noche .nav-link:focus {
+  background-color: var(--text-contrast) !important;
+  color: var(--bg-contrast) !important;
+}
+
+body.contraste-alto.modo-noche .nav-link.active {
+  background-color: var(--text-contrast) !important;
+  color: var(--bg-contrast) !important;
+  font-weight: bold;
+}
+
+body.contraste-alto.modo-noche .btn {
+  border: 2px solid var(--border-contrast) !important;
+}
+
+body.contraste-alto.modo-noche .btn-primary {
+  background-color: var(--text-contrast) !important;
+  color: var(--bg-contrast) !important;
+}
+
+body.contraste-alto.modo-noche .form-control,
+body.contraste-alto.modo-noche .form-select {
+  background-color: var(--bg-contrast) !important;
+  color: var(--text-contrast) !important;
+  border: 2px solid var(--border-contrast) !important;
+}
+
+body.contraste-alto.modo-noche .dropdown-menu {
+  background-color: var(--bg-contrast) !important;
+  border: 2px solid var(--border-contrast) !important;
+}
+
+body.contraste-alto.modo-noche .dropdown-item:hover {
+  background-color: var(--text-contrast) !important;
+  color: var(--bg-contrast) !important;
+}
+
+/* ===== FOCUS VISIBLE PARA ACCESIBILIDAD ===== */
+
+*:focus-visible {
+  outline: 3px solid #0066ff !important;
+  outline-offset: 2px !important;
+}
+
+body.contraste-alto *:focus-visible {
+  outline: 3px solid var(--text-contrast) !important;
+  outline-offset: 2px !important;
+}

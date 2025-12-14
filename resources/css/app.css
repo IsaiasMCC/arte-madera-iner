@@ -1,0 +1,11 @@
+:root {
+  --font-size-base: 16px;
+}
+
+body {
+  font-size: var(--font-size-base);
+}
+/* FORZAR estilos sobre Bootstrap */
+body:not(.bg-body-tertiary) {
+  background-color: var(--body-bg) !important;
+}
