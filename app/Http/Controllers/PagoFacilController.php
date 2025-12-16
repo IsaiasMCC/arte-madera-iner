@@ -92,8 +92,8 @@ class PagoFacilController extends Controller
             ]);
 
             // Este será el ID que PagoFácil nos devolverá en el callback
-            $paymentNumber = 'DP-' . $detallePago->id;
-
+            $paymentNumber = 'DP-' . $detallePago->id . '-' . time();
+            
             /*
         |--------------------------------------------------------------------------
         | 2️⃣ ARMAR DETALLE DE ORDEN (solo informativo)
@@ -119,7 +119,8 @@ class PagoFacilController extends Controller
             $bearerToken = $this->getBearerToken();
 
             Log::info('PagoFácil callback URL', [
-                'url' => route('pagofacil.callback')
+                // 'url' => route('pagofacil.callback')
+                'url' => "http://mail.tecnoweb.org.bo/inf513/grupo06sc/proyecto_2/public/api/pagofacil/callback"
             ]);
 
             /*
@@ -143,7 +144,8 @@ class PagoFacilController extends Controller
                     "amount"        => $monto,
                     "currency"      => 2,
                     "clientCode"    => "11001",
-                    "callbackUrl"   => route('pagofacil.callback'),
+                    // "callbackUrl"   => route('pagofacil.callback'),
+                    "callbackUrl"   => "http://mail.tecnoweb.org.bo/inf513/grupo06sc/proyecto_2/public/api/pagofacil/callback",
                     "orderDetail"   => $orderDetail
                 ]);
 
@@ -183,13 +185,14 @@ class PagoFacilController extends Controller
         |--------------------------------------------------------------------------
         */
             $detallePago->update([
-                'transaccion_qr' => $transactionId
+                'transaccion_qr' => $paymentNumber
             ]);
 
             return response()->json([
                 'qr'           => 'data:image/png;base64,' . $qrBase64,
                 'payment_id'   => $detallePago->id,
-                'payment_code' => $paymentNumber
+                'payment_code' => $paymentNumber,
+                'transaccion'  => $transactionId
             ]);
         } catch (\Throwable $e) {
 
@@ -200,7 +203,7 @@ class PagoFacilController extends Controller
             ]);
 
             return response()->json([
-                'error' => 'Error interno'
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -350,14 +353,14 @@ class PagoFacilController extends Controller
             DB::transaction(function () use ($detallePago, $fecha, $hora, $metodoPago) {
 
                 $detallePago->estado       = 'PAGADO';
-                $detallePago->fecha_pago  = $fecha ?? now()->format('Y-m-d');
-                $detallePago->hora_pago   = $hora ?? now()->format('H:i:s');
+                $detallePago->fecha  = $fecha ?? now()->format('Y-m-d');
+                $detallePago->hora   = $hora ?? now()->format('H:i:s');
                 $detallePago->metodo_pago_id = 2; // PagoFácil
-                $detallePago->save();
-
+                
                 // 🔄 actualizar saldo del pedido si corresponde
                 $pedido = $detallePago->pago->pedido;
                 $detallePago->saldo = $pedido->getSaldoPendienteAttribute() - $detallePago->monto;
+                $detallePago->save();
             });
 
             return response()->json([

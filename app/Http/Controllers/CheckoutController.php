@@ -168,6 +168,7 @@ class CheckoutController extends Controller
                 'monto' => $monto / 100,
                 'saldo' => ($saldo - $monto) / 100,
                 'metodo_pago_id' => 1,
+                'estado' => 'PAGADO'
             ]);
 
             $pago->update([

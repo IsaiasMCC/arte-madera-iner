@@ -31,6 +31,9 @@ class PedidoController extends Controller
             ->with([
                 'detalles.producto',
                 'envio',
+                'pago.detallePagos' => function ($query) {
+                    $query->where('estado', 'PAGADO');
+                },
                 'pago.detallePagos.metodoPago'
             ])
             ->latest()
