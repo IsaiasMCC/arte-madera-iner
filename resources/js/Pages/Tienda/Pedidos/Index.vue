@@ -218,8 +218,8 @@ import axios from "axios"
 import { usePage } from '@inertiajs/inertia-vue3'
 
 const page = usePage()
-const user = page.props.auth.user
-const userId = user.id
+const user = page.props.auth?.user
+const userId = user?.id
 // PROPS
 const props = defineProps({
     pedidos: Array
