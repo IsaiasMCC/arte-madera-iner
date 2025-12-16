@@ -30,7 +30,7 @@ class PagoRealizado implements ShouldBroadcast
             'id' => $this->detallePago->id,
             'monto' => $this->detallePago->monto,
             'saldo_pendiente' => $this->detallePago->saldo,
-            'pedido_id' => $this->detallePago->pago->pedido->id,
+            'pedido_id' => $this->detallePago->Pago->pedido->id,
         ];
     }
 }
