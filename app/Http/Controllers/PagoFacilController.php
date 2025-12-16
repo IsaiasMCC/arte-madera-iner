@@ -93,7 +93,7 @@ class PagoFacilController extends Controller
 
             // Este será el ID que PagoFácil nos devolverá en el callback
             $paymentNumber = 'DP-' . $detallePago->id . '-' . time();
-            
+
             /*
         |--------------------------------------------------------------------------
         | 2️⃣ ARMAR DETALLE DE ORDEN (solo informativo)
@@ -356,11 +356,14 @@ class PagoFacilController extends Controller
                 $detallePago->fecha  = $fecha ?? now()->format('Y-m-d');
                 $detallePago->hora   = $hora ?? now()->format('H:i:s');
                 $detallePago->metodo_pago_id = 2; // PagoFácil
-                
+
                 // 🔄 actualizar saldo del pedido si corresponde
                 $pedido = $detallePago->pago->pedido;
                 $detallePago->saldo = $pedido->getSaldoPendienteAttribute() - $detallePago->monto;
                 $detallePago->save();
+
+                // 🚀 Emitir evento en tiempo real
+                event(new \App\Events\PagoRealizado($detallePago));
             });
 
             return response()->json([

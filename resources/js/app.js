@@ -8,6 +8,8 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import $ from 'jquery';
 window.$ = window.jQuery = $;
 
+// EVENT
+import './echo'; // Importa la configuración de Echo
 // Bootstrap 5 CSS
 import 'bootstrap/dist/css/bootstrap.min.css';
 
