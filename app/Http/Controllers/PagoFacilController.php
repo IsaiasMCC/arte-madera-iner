@@ -7,6 +7,7 @@ use App\Models\DetallePago;
 use App\Models\Pago;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -61,101 +62,149 @@ class PagoFacilController extends Controller
     public function generarQR(Request $request)
     {
         try {
-            $pago = Pago::findOrFail($request->pago_id);
+            $pago   = Pago::findOrFail($request->pago_id);
             $pedido = $pago->pedido;
             $usuario = $pedido->user;
-            $monto = $request->monto;
-            $monto_pendiente = $pedido->getSaldoPendienteAttribute();
 
-            if ($monto >= $monto_pendiente && $monto < 0) {
-                return response()->json(["error" => "El pedido ya está pagado."]);
+            $monto = (float) $request->monto;
+            $montoPendiente = $pedido->getSaldoPendienteAttribute();
+
+            if ($monto <= 0 || $monto > $montoPendiente) {
+                return response()->json([
+                    'error' => 'Monto inválido'
+                ], 422);
             }
 
-            // Preparar detalle de orden
+            /*
+        |--------------------------------------------------------------------------
+        | 1️⃣ CREAR REGISTRO PENDIENTE (INTENCIÓN DE PAGO)
+        |--------------------------------------------------------------------------
+        | Esto NO es el pago final
+        */
+            $detallePago = DetallePago::create([
+                'fecha'     => now()->format('Y-m-d'),
+                'hora'      => now()->format('H:i:s'),
+                'pedido_id' => $pedido->id,
+                'pago_id'   => $pago->id,
+                'monto'     => $monto,
+                'metodo_pago_id' => 2, // PagoFácil
+                'saldo'    => $pedido->getSaldoPendienteAttribute(),
+            ]);
+
+            // Este será el ID que PagoFácil nos devolverá en el callback
+            $paymentNumber = 'DP-' . $detallePago->id;
+
+            /*
+        |--------------------------------------------------------------------------
+        | 2️⃣ ARMAR DETALLE DE ORDEN (solo informativo)
+        |--------------------------------------------------------------------------
+        */
             $orderDetail = [];
-            foreach ($pedido->detalles as $index => $detalle) {
-                $orderDetail[] = [
-                    "serial" => $index + 1,
-                    "product" => $detalle->producto->nombre,
-                    "quantity" => $detalle->cantidad,
-                    "price" => (float) $detalle->subtotal,
-                    "discount" => 0,
-                    "total" => (float) ($detalle->subtotal * $detalle->cantidad)
-                ];
-            }
+            // foreach ($pedido->detalles as $index => $detalle) {
+            //     $orderDetail[] = [
+            //         "serial"   => $index + 1,
+            //         "product"  => $detalle->producto->nombre,
+            //         "quantity" => $detalle->cantidad,
+            //         "price"    => (float) $detalle->subtotal,
+            //         "discount" => 0,
+            //         "total"    => (float) ($detalle->subtotal * $detalle->cantidad)
+            //     ];
+            // }
 
-            // Obtener token
+            /*
+        |--------------------------------------------------------------------------
+        | 3️⃣ TOKEN PAGO FÁCIL
+        |--------------------------------------------------------------------------
+        */
             $bearerToken = $this->getBearerToken();
 
-            // Generar QR
-            Log::info("CALLBACK URL", ['url' => route('pagofacil.callback')]);
+            Log::info('PagoFácil callback URL', [
+                'url' => route('pagofacil.callback')
+            ]);
+
+            /*
+        |--------------------------------------------------------------------------
+        | 4️⃣ GENERAR QR EN PAGOFÁCIL
+        |--------------------------------------------------------------------------
+        */
             $resp = Http::timeout(30)
                 ->withHeaders([
-                    'Content-Type' => 'application/json',
+                    'Content-Type'  => 'application/json',
                     'Authorization' => 'Bearer ' . $bearerToken
                 ])
                 ->post($this->baseUrl . '/generate-qr', [
                     "paymentMethod" => 4,
-                    "clientName" => $usuario->name ?? "Cliente",
-                    "documentType" => 1,
-                    "documentId" => $usuario->ci ?? "0",
-                    "phoneNumber" => $usuario->telefono ?? "00000000",
-                    "email" => $usuario->email,
-                    "paymentNumber" => "PED-" . $pedido->id . "-" . time(),
-                    "amount" => (float) $monto,
-                    "currency" => 2,
-                    "clientCode" => "11001",
-                    // "callbackUrl" => "https://www.tecnoweb.org.bo/inf513/grupo06sc/proyecto2/public/api/pagofacil/callback",
-                    "callbackUrl" => route('pagofacil.callback'),
-                    "orderDetail" => $orderDetail
+                    "clientName"    => $usuario->nombres . " " . $usuario->apellidos ?? "Cliente",
+                    "documentType"  => 1,
+                    "documentId"    => $usuario->ci ?? "0",
+                    "phoneNumber"   => "77046105",
+                    "email"         => $usuario->email,
+                    "paymentNumber" => $paymentNumber, // 🔑 CLAVE
+                    "amount"        => $monto,
+                    "currency"      => 2,
+                    "clientCode"    => "11001",
+                    "callbackUrl"   => route('pagofacil.callback'),
+                    "orderDetail"   => $orderDetail
                 ]);
 
             if (!$resp->successful()) {
-                Log::error("Error PagoFácil generate-qr", [
+                Log::error('Error PagoFácil generate-qr', [
                     'status' => $resp->status(),
-                    'body' => $resp->body()
+                    'body'   => $resp->body()
                 ]);
+
+                // rollback de la intención si falla el QR
+                $detallePago->delete();
+
                 return response()->json([
-                    "error" => "Error al generar QR",
-                    "status" => $resp->status(),
-                    "details" => $resp->json()
-                ]);
+                    'error' => 'Error al generar QR'
+                ], 500);
             }
 
             $data = $resp->json();
-            Log::info("Respuesta generate-qr", $data);
 
-            // Extraer datos según la respuesta real que vimos
-            $transaccionId = $data['values']['transactionId'] ?? null;
-            $qrBase64 = $data['values']['qrBase64'] ?? null;
+            Log::info('Respuesta generate-qr', $data);
 
-            if (!$transaccionId || !$qrBase64) {
+            $transactionId = $data['values']['transactionId'] ?? null;
+            $qrBase64      = $data['values']['qrBase64'] ?? null;
+
+            if (!$transactionId || !$qrBase64) {
+                $detallePago->delete();
+
                 return response()->json([
-                    "error" => "Respuesta incompleta de PagoFácil",
-                    "data" => $data
-                ]);
+                    'error' => 'Respuesta incompleta de PagoFácil',
+                    'data'  => $data
+                ], 500);
             }
 
-            // Guardar transacción en BD
-            // $pago->transaccion_qr = $transaccionId;
-            $pago->save();
+            /*
+        |--------------------------------------------------------------------------
+        | 5️⃣ GUARDAR DATOS DE PAGOFÁCIL (OPCIONAL)
+        |--------------------------------------------------------------------------
+        */
+            $detallePago->update([
+                'transaccion_qr' => $transactionId
+            ]);
 
             return response()->json([
-                "qr" => "data:image/png;base64," . $qrBase64,
-                "transaccion" => $transaccionId,
-                'data' => $data
+                'qr'           => 'data:image/png;base64,' . $qrBase64,
+                'payment_id'   => $detallePago->id,
+                'payment_code' => $paymentNumber
             ]);
-        } catch (\Exception $e) {
-            Log::error("Excepción en generarQR", [
+        } catch (\Throwable $e) {
+
+            Log::error('Excepción generarQR', [
                 'message' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile()
+                'line'    => $e->getLine(),
+                'file'    => $e->getFile()
             ]);
+
             return response()->json([
-                "error" => "Error interno: " . $e->getMessage()
+                'error' => 'Error interno'
             ], 500);
         }
     }
+
 
     public function consultarEstado(Request $request)
     {
@@ -237,149 +286,97 @@ class PagoFacilController extends Controller
         }
     }
 
+
     public function urlCallback(Request $request)
     {
+        Log::info('Callback PagoFácil recibido', $request->all());
+
         try {
-            Log::info("Callback PagoFácil recibido", $request->all());
+            $paymentNumber = $request->input('PedidoID');
+            $estado        = (int) $request->input('Estado');
+            $fecha         = $request->input('Fecha');
+            $hora          = $request->input('Hora');
+            $metodoPago    = $request->input('MetodoPago');
 
-            // Leer campos reales que envía PagoFácil
-            $pedidoID   = $request->input('PedidoID'); // "PED-21-1765746251"
-            $estado     = $request->input('Estado');
-            $fecha      = $request->input('Fecha');
-            $hora       = $request->input('Hora');
-            $metodoPago = $request->input('MetodoPago');
-
-            if (!$pedidoID) {
-                Log::error("No se recibió PedidoID en el callback");
-                return response()->json([
-                    'error' => 1,
-                    'status' => 0,
-                    'message' => 'PedidoID requerido',
-                    'messageMostrar' => 0,
-                    'messageSistema' => 'Campo PedidoID ausente',
-                    'values' => false
-                ], 400);
+            if (!$paymentNumber) {
+                Log::warning('Callback sin PedidoID');
+                return response()->json(['status' => 1], 200);
             }
 
-            // AQUÍ ESTÁ EL CAMBIO PRINCIPAL
-            // Extraer el ID del pedido de "PED-21-1765746251" -> "21"
-            preg_match('/PED-(\d+)-/', $pedidoID, $matches);
-            $pedidoId = $matches[1] ?? null;
+            /*
+        |--------------------------------------------------------------------------
+        | 1️⃣ BUSCAR INTENCIÓN DE PAGO
+        |--------------------------------------------------------------------------
+        */
+            $detallePago = DetallePago::where('transaccion_qr', $paymentNumber)->first();
 
-            if (!$pedidoId) {
-                Log::error("No se pudo extraer el ID del pedido", ['PedidoID' => $pedidoID]);
-                return response()->json([
-                    'error' => 1,
-                    'status' => 0,
-                    'message' => 'Formato de PedidoID inválido',
-                    'messageMostrar' => 0,
-                    'messageSistema' => 'No se pudo extraer ID',
-                    'values' => false
-                ], 400);
-            }
-
-            Log::info("ID del pedido extraído", ['pedido_id' => $pedidoId, 'pedidoID_completo' => $pedidoID]);
-
-            // Buscar el pago más reciente para este pedido que no esté completado
-            $pago = Pago::where('pedido_id', $pedidoId)
-                ->whereDoesntHave('detallePagos') // O la condición que uses para pagos pendientes
-                ->latest()
-                ->first();
-
-            // Si no hay pago sin detalles, buscar el último pago del pedido
-            if (!$pago) {
-                $pago = Pago::where('pedido_id', $pedidoId)
-                    ->latest()
-                    ->first();
-            }
-
-            if (!$pago) {
-                Log::warning("Pago no encontrado para pedido", ['pedido_id' => $pedidoId, 'pedidoID' => $pedidoID]);
-                return response()->json([
-                    'error' => 1,
-                    'status' => 0,
-                    'message' => 'Pago no encontrado',
-                    'messageMostrar' => 0,
-                    'messageSistema' => "No existe pago para pedido {$pedidoId}",
-                    'values' => false
-                ], 404);
-            }
-
-            // Guardar el ID de transacción de PagoFácil
-            if (!$pago->transaccion_qr) {
-                $pago->transaccion_qr = $pedidoID;
-                $pago->save();
-                Log::info("Transacción QR guardada", ['pago_id' => $pago->id, 'transaccion' => $pedidoID]);
-            }
-
-            // Estados que indican que el pago fue completado
-            $estadosPagado = ['2', 2, 'COMPLETED', 'PAGADO', 'APPROVED', 'SUCCESS'];
-
-            if (in_array($estado, $estadosPagado)) {
-                $pedido = $pago->pedido;
-                $monto  = $pedido->saldoPendiente();
-
-                // Verificar que no se duplique el pago
-                $yaRegistrado = DetallePago::where('pago_id', $pago->id)
-                    ->where('monto', $monto)
-                    ->whereDate('created_at', today())
-                    ->exists();
-
-                if ($yaRegistrado) {
-                    Log::info("Pago ya registrado anteriormente", ['pago_id' => $pago->id]);
-                    return response()->json([
-                        'error' => 0,
-                        'status' => 1,
-                        'message' => 'Pago ya fue registrado',
-                        'messageMostrar' => 0,
-                        'messageSistema' => '',
-                        'values' => true
-                    ], 200);
-                }
-
-                // Registrar el pago
-                DetallePago::create([
-                    'pago_id' => $pago->id,
-                    'fecha'   => $fecha ?? now()->format('Y-m-d'),
-                    'hora'    => $hora ?? now()->format('H:i:s'),
-                    'monto'   => $monto,
-                    'saldo'   => 0
+            if (!$detallePago) {
+                Log::warning('DetallePago no encontrado', [
+                    'paymentNumber' => $paymentNumber
                 ]);
-
-                $pago->monto = $pago->detallePagos()->sum('monto');
-                $pago->save();
-
-                Log::info("Pago procesado exitosamente", [
-                    'pago_id' => $pago->id,
-                    'pedido_id' => $pedidoId,
-                    'monto'   => $monto,
-                    'metodo'  => $metodoPago
-                ]);
+                return response()->json(['status' => 1], 200);
             }
+
+            /*
+        |--------------------------------------------------------------------------
+        | 2️⃣ IDEMPOTENCIA REAL
+        |--------------------------------------------------------------------------
+        */
+            if ($detallePago->estado === 'PAGADO') {
+                Log::info('Callback duplicado ignorado', [
+                    'detalle_pago_id' => $detallePago->id
+                ]);
+                return response()->json(['status' => 1], 200);
+            }
+
+            /*
+        |--------------------------------------------------------------------------
+        | 3️⃣ SOLO ESTADO 2 CONFIRMA
+        |--------------------------------------------------------------------------
+        */
+            if ($estado !== 2) {
+                Log::info('Estado no exitoso', [
+                    'estado' => $estado,
+                    'detalle_pago_id' => $detallePago->id
+                ]);
+                return response()->json(['status' => 1], 200);
+            }
+
+            /*
+        |--------------------------------------------------------------------------
+        | 4️⃣ CONFIRMAR PAGO
+        |--------------------------------------------------------------------------
+        */
+            DB::transaction(function () use ($detallePago, $fecha, $hora, $metodoPago) {
+
+                $detallePago->estado       = 'PAGADO';
+                $detallePago->fecha_pago  = $fecha ?? now()->format('Y-m-d');
+                $detallePago->hora_pago   = $hora ?? now()->format('H:i:s');
+                $detallePago->metodo_pago_id = 2; // PagoFácil
+                $detallePago->save();
+
+                // 🔄 actualizar saldo del pedido si corresponde
+                $pedido = $detallePago->pago->pedido;
+                $detallePago->saldo = $pedido->getSaldoPendienteAttribute() - $detallePago->monto;
+            });
 
             return response()->json([
                 'error' => 0,
                 'status' => 1,
-                'message' => 'Pago realizado correctamente',
-                'messageMostrar' => 0,
-                'messageSistema' => '',
-                'values' => true
+                'message' => 'OK'
             ], 200);
-        } catch (\Exception $e) {
-            Log::error("Error en callback: " . $e->getMessage(), [
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
-                'stack' => $e->getTraceAsString()
+        } catch (\Throwable $e) {
+
+            Log::error('Error callback PagoFácil', [
+                'error' => $e->getMessage()
             ]);
 
+            // ⚠️ SIEMPRE 200
             return response()->json([
                 'error' => 1,
-                'status' => 0,
-                'message' => 'Ocurrió un error al procesar la transacción',
-                'messageMostrar' => 0,
-                'messageSistema' => $e->getMessage(),
-                'values' => false
-            ], 500);
+                'status' => 1,
+                'message' => 'OK'
+            ], 200);
         }
     }
 }

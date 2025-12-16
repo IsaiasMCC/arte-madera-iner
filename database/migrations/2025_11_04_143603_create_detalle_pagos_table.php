@@ -18,7 +18,9 @@ return new class extends Migration
             $table->decimal('monto', 10, 2);
             $table->decimal('saldo', 10, 2);
             $table->foreignId('pago_id')->constrained('pagos');
+            $table->string('transaccion_qr')->nullable();
             $table->foreignId('metodo_pago_id')->nullable()->constrained('metodo_pagos');
+            $table->string('estado')->default('PENDIENTE');
             $table->timestamps();
         });
     }
