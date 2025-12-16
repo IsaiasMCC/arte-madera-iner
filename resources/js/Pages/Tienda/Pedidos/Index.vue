@@ -211,15 +211,15 @@
 
 <script setup>
 import { ref } from 'vue'
-import { router, Link } from '@inertiajs/vue3'
+import { router, Link,  usePage} from '@inertiajs/vue3'
 import TiendaLayout from '@/Layouts/TiendaLayout.vue'
 import { onMounted } from 'vue'
 import axios from "axios"
-import { usePage } from '@inertiajs/inertia-vue3'
 
 const page = usePage()
 const user = page.props.auth?.user
 const userId = user?.id
+console.log('User ID:', userId)
 // PROPS
 const props = defineProps({
     pedidos: Array

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PagoRealizado;
 use App\Http\Controllers\Controller;
 use App\Models\DetallePago;
 use App\Models\Pago;
@@ -350,7 +351,7 @@ class PagoFacilController extends Controller
         | 4️⃣ CONFIRMAR PAGO
         |--------------------------------------------------------------------------
         */
-            DB::transaction(function () use ($detallePago, $fecha, $hora, $metodoPago) {
+            DB::transaction(function () use ($detallePago, $fecha, $hora) {
 
                 $detallePago->estado       = 'PAGADO';
                 $detallePago->fecha  = $fecha ?? now()->format('Y-m-d');
@@ -363,7 +364,7 @@ class PagoFacilController extends Controller
                 $detallePago->save();
 
                 // 🚀 Emitir evento en tiempo real
-                event(new \App\Events\PagoRealizado($detallePago));
+                event(new PagoRealizado($detallePago));
             });
 
             return response()->json([
@@ -372,7 +373,7 @@ class PagoFacilController extends Controller
                 'message' => 'OK'
             ], 200);
         } catch (\Throwable $e) {
-
+            DB::rollBack();
             Log::error('Error callback PagoFácil', [
                 'error' => $e->getMessage()
             ]);
